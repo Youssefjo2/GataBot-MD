@@ -192,3 +192,86 @@ When connecting to MySQL and MariaDB, ensure you specify the correct port:
   ```
 
 This setup allows you to run both MySQL 8 and MariaDB 10.2 on the same Ubuntu VPS without conflicts.
+
+
+
+
+
+
+الرسالة التي ظهرت لك تشير إلى أن نظامك (Ubuntu Jammy، وهو الإصدار 22.04) غير مدعوم رسميًا من MySQL. ولتخطي هذه المشكلة، بإمكانك اختيار أحد الإصدارات القريبة المدعومة مثل "Ubuntu Impish" (الإصدار 21.10) أو "Ubuntu Focal" (الإصدار 20.04) في الشاشة التي تظهر أمامك.
+
+الخطوات التي يمكنك اتباعها:
+
+1. في الشاشة التي ظهرت لك، اختر إما:
+   - **Ubuntu Impish**: الأقرب إلى إصدار نظامك.
+   - **Ubuntu Focal**: وهو إصدار LTS أقدم ولكن مدعوم بشكل أكبر.
+
+2. بعد الاختيار، تابع الإعداد ثم قم بتنفيذ الأوامر التالية لإتمام تثبيت MySQL:
+
+   ```bash
+   sudo apt update
+   sudo apt install mysql-server
+   ```
+
+3. إذا استمرت المشكلة أو ظهرت مشاكل أخرى بعد التثبيت، يمكنك اللجوء إلى مستودعات Ubuntu الرسمية لتنزيل MySQL من خلال:
+
+   ```bash
+   sudo apt install mysql-server
+   ```
+
+بهذه الطريقة يمكنك تثبيت MySQL على نظامك حتى وإن لم يكن مدعومًا رسميًا.
+
+
+
+
+
+
+من الرسالة التي ظهرت لك، يبدو أن الحزمة تم تثبيتها بشكل صحيح ولكن بدون ظهور القائمة التي كنت تراها سابقًا.
+
+لتعديل إعدادات MySQL أو إعادة عرض القائمة التي ظهرت لك مسبقًا، يمكنك القيام بما يلي:
+
+### 1. **إعادة ضبط إعدادات MySQL APT**
+يمكنك إعادة ضبط إعدادات الحزمة الخاصة بـ MySQL واختيار الإصدار المناسب لنظامك:
+
+```bash
+sudo dpkg-reconfigure mysql-apt-config
+```
+
+عند تنفيذ هذا الأمر، ستظهر لك نفس الشاشة التي ظهرت لك في المرة الأولى. اختر "Ubuntu Impish" أو "Ubuntu Focal" كما اقترحت سابقًا.
+
+### 2. **التحديث والتثبيت بعد إعادة الضبط**
+بعد تحديد النظام المناسب من القائمة، قم بتحديث الحزم وتثبيت MySQL مجددًا:
+
+```bash
+sudo apt update
+sudo apt install mysql-server
+```
+
+### 3. **التأكد من إضافة المفتاح المناسب**
+نظرًا لأن هناك تحذيرًا بشأن استخدام `apt-key` (الذي أصبح قديمًا)، يمكنك اتباع الإرشادات التالية لتجنب أي مشكلة متعلقة بالمفاتيح:
+
+1. **أضف المفتاح بشكل يدوي باستخدام `trusted.gpg.d`:**
+
+   تأكد من أنك تضيف المفتاح بالطريقة المحدثة المناسبة (لـ MySQL):
+
+   ```bash
+   wget -q -O - https://repo.mysql.com/RPM-GPG-KEY-mysql | sudo gpg --dearmor -o /usr/share/keyrings/mysql.gpg
+   ```
+
+2. **تحديث الملف المصدر لـ MySQL:**
+
+   تأكد من أن الملف الخاص بـ MySQL يشير إلى المفتاح الجديد:
+
+   ```bash
+   echo 'deb [signed-by=/usr/share/keyrings/mysql.gpg] http://repo.mysql.com/apt/ubuntu/ jammy mysql-8.0' | sudo tee /etc/apt/sources.list.d/mysql.list
+   ```
+
+### 4. **التحديث الأخير وتثبيت MySQL**
+بعد ذلك، قم بتنفيذ:
+
+```bash
+sudo apt update
+sudo apt install mysql-server
+```
+
+بهذا الشكل، ستتمكن من متابعة التثبيت بدون مشاكل واختيار النسخة المناسبة لنظامك.
