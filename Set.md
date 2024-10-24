@@ -672,3 +672,65 @@ mysql -u root -p
 ```
 
 ثم أدخل كلمة المرور التي أعدت تعيينها.
+
+
+
+--------//
+
+
+
+بناءً على الرسالة التي ظهرت (`Failed to start MySQL Community Server`)، MySQL لا يتمكن من البدء بسبب مشكلة في تهيئته أو تشغيله.
+
+### الخطوات المقترحة لحل المشكلة:
+
+#### 1. **فحص سجل الأخطاء الكامل:**
+يبدو أن المشكلة ليست واضحة بشكل كامل من نتيجة `systemctl status`. نفذ الأمر التالي للحصول على المزيد من التفاصيل حول المشكلة:
+
+```bash
+sudo journalctl -xeu mysql.service
+```
+
+#### 2. **فحص إعدادات MySQL:**
+قد يكون هناك مشكلة في إعدادات MySQL. تأكد من أن الملفات التالية تحتوي على إعدادات صحيحة:
+
+```bash
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+
+تأكد من أن المسارات، خاصةً `socket` و `pid-file`، مضبوطة بشكل صحيح على:
+
+```ini
+socket = /var/run/mysqld/mysqld.sock
+pid-file = /var/run/mysqld/mysqld.pid
+```
+
+#### 3. **التأكد من وجود الملفات والمجلدات الصحيحة:**
+قد يكون المجلد الخاص بملف الـ `socket` مفقودًا. قم بتنفيذ التالي لإنشاء المجلد وضبط الأذونات:
+
+```bash
+sudo mkdir -p /var/run/mysqld
+sudo chown mysql:mysql /var/run/mysqld
+```
+
+#### 4. **محاولة إعادة التثبيت:**
+إذا استمرت المشكلة بعد كل المحاولات السابقة، يمكنك محاولة إعادة تثبيت MySQL:
+
+1. **إزالة MySQL:**
+   ```bash
+   sudo apt remove --purge mysql-server mysql-client mysql-common
+   ```
+
+2. **إعادة التثبيت:**
+   ```bash
+   sudo apt update
+   sudo apt install mysql-server
+   ```
+
+#### 5. **إصلاح أي ملفات معطوبة:**
+بعد التثبيت أو إعادة التثبيت، استخدم الأمر التالي لإصلاح أي حزم معطوبة:
+
+```bash
+sudo apt --fix-broken install
+```
+
+نفذ هذه الخطوات وشارك نتائج `journalctl -xeu mysql.service` إذا استمرت المشكلة بعد ذلك.
