@@ -571,3 +571,104 @@ sudo cat /var/log/mysql/error.log
 ```
 
 السجل سيحتوي على معلومات تفصيلية قد تساعد في تحديد السبب وراء فشل MySQL في التشغيل.
+
+--------///
+
+لفهم المشكلة التي تواجهها بشكل أفضل، دعنا نحل بعض النقاط:
+
+1. **الرسالة التي تظهر:**
+   الرسالة `Can't connect to local MySQL server through socket '/tmp/mysql.sock'` تشير إلى أن MySQL لا يستطيع العثور على ملف الـ socket لتوصيل الخدمة. هذا يعني أن MySQL ليس قيد التشغيل أو أن هناك خطأ في تكوينه.
+
+### الخطوات لحل المشكلة:
+
+#### 1. **التأكد من أن MySQL غير محجوب وتشغيله:**
+أولًا، تأكد من أن MySQL ليس "محجوبًا" (masked) ولا يزال مثبتًا بشكل صحيح. نفذ هذه الأوامر:
+
+```bash
+sudo systemctl unmask mysql
+sudo systemctl enable mysql
+sudo systemctl start mysql
+```
+
+ثم تحقق من حالة MySQL:
+
+```bash
+sudo systemctl status mysql
+```
+
+#### 2. **إعادة ضبط مسار الـ socket:**
+قد تكون المشكلة في أن MySQL يبحث عن ملف الـ socket في المكان الخطأ. المسار الذي تبحث عنه MySQL في `/tmp/mysql.sock`، لكن عادةً يكون في `/var/run/mysqld/mysqld.sock`.
+
+افتح ملف الإعدادات `mysqld.cnf` للتأكد من أن المسار مضبوط بشكل صحيح:
+
+```bash
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+
+تأكد من أن السطر التالي غير معلق:
+
+```ini
+socket = /var/run/mysqld/mysqld.sock
+```
+
+ثم احفظ التعديلات، وأعد تشغيل MySQL:
+
+```bash
+sudo systemctl restart mysql
+```
+
+#### 3. **إنشاء المسار إذا كان مفقودًا:**
+إذا لم يكن المسار `/var/run/mysqld/` موجودًا، يمكنك إنشاؤه يدويًا وإعطاء الأذونات الصحيحة:
+
+```bash
+sudo mkdir -p /var/run/mysqld
+sudo chown mysql:mysql /var/run/mysqld
+```
+
+ثم حاول تشغيل الخدمة مجددًا:
+
+```bash
+sudo systemctl start mysql
+```
+
+#### 4. **كلمة المرور:**
+- إذا كان MySQL يطلب منك كلمة مرور عند تسجيل الدخول عبر `mysql -u root -p`، فهذه هي كلمة المرور الخاصة بمستخدم `root` على MySQL، وليس كلمة مرور الـ VPS.
+- إذا كنت لا تعرف كلمة مرور الـ MySQL، يمكنك إعادة ضبطها:
+
+1. **توقف عن تشغيل MySQL:**
+   ```bash
+   sudo systemctl stop mysql
+   ```
+
+2. **تشغيل MySQL في الوضع الآمن لتجاوز كلمات المرور:**
+   ```bash
+   sudo mysqld_safe --skip-grant-tables &
+   ```
+
+3. **اتصال بدون كلمة مرور:**
+   الآن يمكنك الاتصال بدون كلمة مرور:
+   ```bash
+   mysql -u root
+   ```
+
+4. **إعادة تعيين كلمة المرور:**
+   داخل واجهة MySQL، أعد تعيين كلمة مرور root:
+
+   ```sql
+   ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'NewPassword';
+   FLUSH PRIVILEGES;
+   ```
+
+5. **أعد تشغيل MySQL:**
+   ```bash
+   sudo systemctl stop mysql
+   sudo systemctl start mysql
+   ```
+
+بعد هذه الخطوات، يجب أن تتمكن من تسجيل الدخول إلى MySQL باستخدام:
+
+```bash
+mysql -u root -p
+```
+
+ثم أدخل كلمة المرور التي أعدت تعيينها.
