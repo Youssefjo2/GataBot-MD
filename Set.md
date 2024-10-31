@@ -908,3 +908,109 @@ dmesg | grep mysql
    عند طلب كلمة المرور، أدخل كلمة المرور التي قمت بتعيينها أثناء التثبيت أو كلمة المرور الافتراضية إذا لم تقم بتعيين واحدة.
 
 ### بعد اتباع هذه الخطوات، إذا ظهرت لك أي أخطاء أو مشاكل، شاركني بالتفاصيل وسأساعدك في حلها.
+
+
+
+
+
+
+
+
+---------------------------/////
+
+
+
+إليك الخطوات الكاملة لتشغيل مشروعك Node.js عبر HTTPS على VPS، بغض النظر عن مزود DNS. سنستخدم **Let's Encrypt** للحصول على شهادة SSL مجانية وتكوين **Nginx** لتوجيه الطلبات إلى تطبيقك.
+
+### الخطوات:
+
+1. **تأكد من تثبيت Node.js وNPM:**
+   تأكد من وجود Node.js وNPM على VPS عبر تشغيل:
+   ```bash
+   node -v
+   npm -v
+   ```
+
+2. **التأكد من إعداد مشروعك وتشغيله:**
+   - تأكد من أن مشروعك يحتوي على سكريبت تشغيل في `package.json`:
+     ```json
+     "scripts": {
+       "start": "node index.js"
+     }
+     ```
+   - إذا كنت تفضل استخدام `PM2` لإدارة عملية التشغيل، فثبّت `PM2` وشغل التطبيق:
+     ```bash
+     sudo npm install -g pm2
+     cd /var/www/api
+     pm2 start index.js --name "my-api"
+     pm2 startup
+     pm2 save
+     ```
+
+3. **تثبيت Nginx (إذا لم يكن مثبتًا):**
+   ```bash
+   sudo apt update
+   sudo apt install nginx
+   ```
+
+4. **إعداد Nginx لتوجيه الطلبات إلى تطبيقك:**
+   - قم بإنشاء ملف إعداد جديد لموقعك:
+     ```bash
+     sudo nano /etc/nginx/sites-available/api.joanimi-world.site
+     ```
+   - أضف إعدادات التوجيه الأساسية:
+     ```nginx
+     server {
+         listen 80;
+         server_name api.joanimi-world.site;
+
+         location / {
+             proxy_pass http://localhost:3000;  # تأكد من أن المنفذ صحيح
+             proxy_http_version 1.1;
+             proxy_set_header Upgrade $http_upgrade;
+             proxy_set_header Connection 'upgrade';
+             proxy_set_header Host $host;
+             proxy_cache_bypass $http_upgrade;
+         }
+     }
+     ```
+
+5. **تفعيل إعدادات Nginx:**
+   - قم بتفعيل الموقع بإنشاء رابط رمزي في `sites-enabled`:
+     ```bash
+     sudo ln -s /etc/nginx/sites-available/api.joanimi-world.site /etc/nginx/sites-enabled/
+     ```
+   - تأكد من صحة الإعدادات:
+     ```bash
+     sudo nginx -t
+     ```
+   - أعد تشغيل Nginx:
+     ```bash
+     sudo systemctl restart nginx
+     ```
+
+6. **تثبيت Certbot للحصول على شهادة SSL مجانية:**
+   - قم بتثبيت Certbot:
+     ```bash
+     sudo apt install certbot python3-certbot-nginx
+     ```
+
+7. **الحصول على شهادة SSL باستخدام Certbot:**
+   - قم بتشغيل Certbot لتهيئة Nginx تلقائيًا ليعمل عبر HTTPS:
+     ```bash
+     sudo certbot --nginx -d api.joanimi-world.site
+     ```
+   - اتبع التعليمات التي تظهر، حيث سيطلب منك عنوان بريد إلكتروني للمراسلة، والموافقة على شروط الاستخدام.
+   - Certbot سيقوم بإعداد Nginx ليعمل عبر HTTPS وتفعيل التوجيه التلقائي من HTTP إلى HTTPS.
+
+8. **إعداد التجديد التلقائي للشهادة:**
+   - للتحقق من إعداد التجديد التلقائي للشهادة، قم بتشغيل:
+     ```bash
+     sudo certbot renew --dry-run
+     ```
+   - إذا كانت الأوامر تعمل دون مشاكل، سيتم تجديد الشهادة تلقائيًا.
+
+9. **اختبار الموقع:**
+   - انتقل إلى `https://api.joanimi-world.site` للتحقق من أن التطبيق يعمل بشكل صحيح عبر HTTPS.
+
+بهذه الخطوات، سيتم تشغيل مشروعك Node.js عبر HTTPS بغض النظر عن مزود النطاق، وستكون الشهادة من Let's Encrypt مفعلة وتُجدد تلقائيًا لضمان أمان دائم.
