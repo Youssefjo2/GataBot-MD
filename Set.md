@@ -1130,3 +1130,4 @@ sudo tail -f /var/log/nginx/error.log
    ```
 
 بعد القيام بهذه الخطوات، تحقق مجددًا من حالة الموقع على `https://api.joanimi-world.site`.
+https://youtu.be/kATu1AqkU1s
